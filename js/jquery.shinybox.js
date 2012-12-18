@@ -131,8 +131,14 @@
 		switch($type){
 			
 			case 'frame':
-				$('#shinybox_frame').load(function(){
-					show();
+				$('#shinybox_frame').load($url, function(response,status){
+					if(status == 'success'){
+						show();	
+					}
+					else if(status == 'error'){
+						alert('Loading impossible, please try later.');
+						close();
+					}
 				});
 			break;
 			
