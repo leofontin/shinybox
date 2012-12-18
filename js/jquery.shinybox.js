@@ -1,116 +1,240 @@
+/*
+* SHINYBOX
+* jquery plugin for photo presentation
+* developped by Léo Fontin 2012
+*/
+
 (function($){
 
-	// initialisation des variables
-	var $item;
-	var $elem;
-	var $current;
-	var $imageloader;
-	var $url;
-	var $settings;
-	var $posleft;
-	var $postop;
-	var $wimg;
-	var $himg;
-	var $selector;
-	var $nbitem;
-	var $open = false;
-	var $tabimg = new Array();
-	var $timer;
-	
-	var $themes = {
-		'default' : '\
-			<div id="shinybox">\
-				<div id="shinybox_contener">\
-					<div id="shinybox_close"></div>\
-					<div id="shinybox_prev"></div>\
-					<div id="shinybox_next"></div>\
-					<div id="shinybox_content">\
-						<img id="shinybox_img" src="" alt="" />\
-					</div>\
-				</div>\
-				<div id="shinybox_loader"></div>\
-				<div id="shinybox_back"></div>\
-			</div>'
+	// settings initialisation
+	var $option = {
+		opacity 	: 0.8,
+		width 		: 'auto',
+		height 		: 'auto',
+		duration 	: 500,
+		delay 		: 5000,
+		galery 		: false,
+		autoplay	: false,
+		type		: 'default'
 	}
+
+	// params initalisation
+	
+	var $item; 					// objet courant
+	var $elem; 					// objet
+	var $current; 				// numéro de l'iten courant
+	var $imageloader; 			// préchargement de l'image
+	var $url; 					// adresse du contenu
+	var $posleft; 				// position horizontal de la popin
+	var $postop; 				// position verticale de la popin
+	var $wimg; 					// largeur de l'image ou contenu
+	var $himg; 					// hauteur de l'image ou contenu
+	var $open = false; 			// statut de la popin
+	var $tabimg = new Array(); 	// tablea udes images
+	var $timer; 				// interval 
+	var $type; 					// type d'affichage frame / inline / image
+	
+	var $theme = '<div id="shinybox">\
+					<div id="shinybox_contener">\
+						<div id="shinybox_close">close.</div>\
+						<div id="shinybox_prev">prev.</div>\
+						<div id="shinybox_next">next.</div>\
+						<div id="shinybox_content"></div>\
+					</div>\
+					<div id="shinybox_loader"></div>\
+					<div id="shinybox_back"></div>\
+				</div>';
+	
+	
+	
+	// element principal
+	$.fn.shinybox = function(options){
+
+
+		return this.each(function(){
+			
+			//intialisation
+			$elem = $(this);
+			
+			// création du tableau des images
+			if($elem.attr('data-shinybox-galery') == 'true'){
+				$tabimg.push($elem.attr('href'));	
+			}
+			
+			
+			
+			// click on item
+			$elem.unbind('click');
+			$elem.click(function(){
+			
+				// concaténation des settings et options
+				$settings = $.extend({},$option,options);
+				
+				// initlisation du type
+				$type = $settings['type'];
+				
+				$item = $(this);
+				
+				$url = $item.attr('href');
+				
+				// calcul du current
+				for(var i=0; i<$tabimg.length; i++){
+					if($url == $tabimg[i]){
+						$current = i;
+					}
+				}
+				
+				init();
+				
+				return false;
+			});
+
+		});
+
+	}
+	
+	
 	
 	// charge le contenu
 	function init(){
 	
 		// implémentation de la popin
-		$('body').prepend($themes['default']);
-		
-		// génération du contenu
-		setContent();
+		$('body').prepend($theme);
 		
 		
 		$('#shinybox_back').css('opacity',0).animate({'opacity' : $settings.opacity}, $settings.duration);
 		$('#shinybox_loader').css({left : (getW())/2, top : getScrollY()+(getH())/2}).hide().fadeIn();
 		
 		$('#shinybox_contener').hide();
-		$('#shinybox_img').hide();
 		$('#shinybox_close').hide();
 		$('#shinybox_prev').hide();
 		$('#shinybox_next').hide();
+		
+		// génération du contenu
+		setContent();
+		
+		// initialisation des boutons
+		initButton();
 		
 		// chargement de l'image
 		load();
 	
 	}
 	
+	
+	
+	
+	
 	// charge l'image avant de demander de l'afficher
 	function load(){
 		
-		// nouvelle image de préchargement
-		$imageloader = new Image();
-		
-		// si image chargér
-		$imageloader.onload = function(){
-			show();
+		switch($type){
+			
+			case 'frame':
+				$('#shinybox_frame').load(function(){
+					show();
+				});
+			break;
+			
+			case 'inline':
+				if($('#shinybox_inline').html() != ''){
+					show();
+				}else{
+					close();
+				}
+			break;
+			
+			case 'default':
+				// nouvelle image de préchargement
+				$imageloader = new Image();
+				
+				// if image loading
+				$imageloader.onload = function(){
+					show();
+				}
+				
+				// if image not loaded
+				$imageloader.onerror = function(){
+					alert('Loading the image can not');
+					close();
+				}		
+				
+				$imageloader.src = $url;
+			break;
+				
 		}
 		
-		// si image pas chargée
-		$imageloader.onerror = function(){
-			alert('Chargement de l\'image impossible');
-			close();
-		}		
 		
-		$imageloader.src = $url;
 	}
+	
+	
+	
+	
+	
 	
 	// affiche l'image
 	function show(){
+	
+
 		
 		// ouvreture première fois popin
 		if(!$open){
 			$('#shinybox_contener').show()
-										  .css({
-										  		width 	: 0, 
-										  		height	: 0, 
-										  		left 	: (getW()/2), 
-										  		top 	: (getScrollY()+getH()/2)
-										  	});
+								   .css({
+								  		width 	: 0, 
+								  		height	: 0, 
+								  		left 	: (getW()/2), 
+								  		top 	: (getScrollY()+getH()/2)
+								  	});
 			$open = true;
 		}
 		
 		// calcul les dimention de la popin
 		setDimension();
 		
-		// affiche la popin
+		// display la popin
 		$('#shinybox_contener').animate({ height : $himg, top : $postop}, $settings.duration)
 							   .animate({ width : $wimg, left : $posleft}, $settings.duration, 'linear', 
-							  		function(){
-							  		
-							  			$('#shinybox_img').fadeIn();
-							  			$('#shinybox_close').fadeIn();
-							  			$('#shinybox_loader').fadeOut();
-							  			
-							  			initButton();
-							   });
+									function(){
+									
+										switch($type){
+											
+											case 'frame':
+												$('#shinybox_frame').width($wimg).height($himg).fadeIn();
+												$('#shinybox_content').addClass('frame');
+											break;
+											
+											case 'inline':
+												$('#shinybox_content').width($wimg).height($himg).addClass('inline');
+												$('#shinybox_inline').fadeIn();
+											break;
+											
+											case 'default':
+												$('#shinybox_img').fadeIn();
+												if($settings.galery && $tabimg.length > 1){
+													$('#shinybox_prev').fadeIn();
+													$('#shinybox_next').fadeIn();		
+												}
+											break;
+											
+										}
+										
+										$('#shinybox_close').fadeIn();
+										$('#shinybox_loader').fadeOut();
+									}
+							   );
 							   
 		if($open == true){
 			
 			$(window).resize(function(){
+				
+				// calcul de snouvelles dimentions
 				setDimension();
+				
+				if($type == 'frame'){
+					$('#shinybox_frame').width($wimg).height($himg).fadeIn();	
+				}
+				
 				$('#shinybox_contener').css({ height : $himg, top : $postop, width : $wimg, left : $posleft}, $settings.duration);
 				$('#shinybox_loader').css({left : (getW())/2, top : getScrollY()+(getH())/2}).hide();
 				
@@ -118,8 +242,8 @@
 			
 		}
 
-		// lance le timer
-		if($settings.auto) setTimer();
+		// set timer
+		if($settings.autoplay && $settings.galery) setTimer();
 		
 	}
 	
@@ -128,109 +252,169 @@
 	
 	// gère l'insertion de l'image
 	function setContent(){
-		$('#shinybox_img').attr('src',$url);
+		
+		switch($type){
+			
+			case 'frame':
+				$('#shinybox_content').append('<iframe frameborder="0" src="" id="shinybox_frame"></iframe>');
+				$('#shinybox_frame').attr('src',$url).hide();
+			break;
+			
+			
+			case 'inline':
+				var content = $($url).html();
+				$('#shinybox_content').append('<div id="shinybox_inline">' + content + '</div>');
+				$('#shinybox_inline').hide();
+			break;
+			
+			
+			case 'default':
+				if($('#shinybox_img').length == 0){
+					$('#shinybox_content').append('<img src="" id="shinybox_img" />');	
+				}
+				$('#shinybox_img').attr('src',$url).hide();
+			break;
+			
+		}
+
 	}
 	
 	
 	
 	
 	
-	// set taille image
+	// set image size
 	function setDimension(){
-	
-		// largeur de l'image
-		var width_img = $imageloader.width;
 		
-		// hauteur de l'image
-		var height_img = $imageloader.height;
-		
-		// largeur de l'ecran
+		// screen width
 		var width_screen = getW();
-
-		// hauteur de l'ecran
-		var height_screen = getH();	
-			
 		
-		// si image plus large que l'écran
-		if(width_img >= width_screen && height_img < height_screen){
-			
-			// calcul de la nouvelle largeur
-			$wimg = width_screen - 30;
-			
-			// calcul de la nouvelle hauteur
-			$himg = ($wimg * height_img) / width_img;
-			
-		}
+		// screen height
+		var height_screen = getH();
 		
-		// si l'image est plus haute de l'écran
-		else if(height_img >= height_screen && width_img < width_screen){
-			
-			// calcul de la nouvelle hauteur
-			$himg = height_screen - 30;
-			
-			// calcul de la nouvelle hauteur
-			$wimg = ($himg * width_img) / height_img;
-			
-		}
 		
-		// si l'image est plus grande que l'écran en largeur et hauteur
-		else if(height_img >= height_screen && width_img >= width_screen){
+		// en fonction du type d'affichage
+		switch($type){
 		
-			var ratio = width_img / height_img;
-		
-			// si image en paysage
-			if(ratio > 1){
+			case 'frame':
 			
-				var temp_width_img = width_screen - 30;
-				var temp_height_img = (temp_width_img * height_img) / width_img;
+				// largeur
+				if($settings['width'] != '' && $settings['width'] < width_screen){
+					$wimg = $settings['width'];
+				}else{
+					$wimg = width_screen - 30;
+				}
 				
-				if(temp_height_img > height_screen){
-					
-					// calcul de la nouvelle hauteur
+				// hauteur
+				if($settings['height'] != '' && $settings['height'] < height_screen){
+					$himg = $settings['height'];
+				}else{
 					$himg = height_screen - 30;
-				
-					// calcul de la nouvelle hauteur
-					$wimg = ($himg * width_img) / height_img;
 				}
-				
-				else{
-					$wimg = temp_width_img;
-					$himg = temp_height_img;
-				}
-				
-				
-			}
 			
-			// si image en portrait
-			else if(ratio < 1){
+			break;
+			
+			
+			
+			case 'inline':
+			
+				$wimg = $settings['width'];
+				$himg = $settings['height'];
 				
-				// calcul de la nouvelle hauteur
-				$himg = height_screen - 30;
 				
-				// calcul de la nouvelle hauteur
-				$wimg = ($himg * width_img) / height_img;
+			break;
+			
+			
+			
+			case 'default':
+				// image width
+				var width_img = $imageloader.width;
+				
+				// image height
+				var height_img = $imageloader.height;
+
+				// if image larger than the screen
+				if(width_img >= width_screen && height_img < height_screen){
 					
-			}
-			
-			// si image carrée
-			else {
-			
-				// calcul de la nouvelle hauteur
-				$himg = height_screen - 30;
+					// calculation of the new width
+					$wimg = width_screen - 30;
+					
+					// calculation of the new pitch
+					$himg = ($wimg * height_img) / width_img;
+					
+				}
 				
-				// calcul de la nouvelle largeur
-				$wimg = $himg;
-			}
-		}
+				// if the image is higher than the screen
+				else if(height_img >= height_screen && width_img < width_screen){
+					
+					// calculation of the new pitch
+					$himg = height_screen - 30;
+					
+					// calculation of the new pitch
+					$wimg = ($himg * width_img) / height_img;
+					
+				}
+				
+				// if the image is larger than the screen width and height
+				else if(height_img >= height_screen && width_img >= width_screen){
+				
+					var ratio = width_img / height_img;
+				
+					// if image in landscape
+					if(ratio > 1){
+					
+						var temp_width_img = width_screen - 30;
+						var temp_height_img = (temp_width_img * height_img) / width_img;
+						
+						if(temp_height_img > height_screen){
+							
+							// calculation of the new pitch
+							$himg = height_screen - 30;
+						
+							// calculation of the new pitch
+							$wimg = ($himg * width_img) / height_img;
+						}
+						
+						else{
+							$wimg = temp_width_img;
+							$himg = temp_height_img;
+						}
+						
+						
+					}
+					
+					// if image portrait
+					else if(ratio < 1){
+						
+						// calculation of the new pitch
+						$himg = height_screen - 30;
+						
+						// calculation of the new pitch
+						$wimg = ($himg * width_img) / height_img;
+							
+					}
+					
+					// if square image
+					else {
+					
+						// calculation of the new pitch
+						$himg = height_screen - 30;
+						
+						// calculation of the new width
+						$wimg = $himg;
+					}
+				}
+				
+				// image smaller than the screen
+				else {
+					
+					$wimg = width_img;
+					$himg = height_img;
+					
+				}
+			break;
 		
-		// image plus petite que l'écran
-		else {
-			
-			$wimg = width_img;
-			$himg = height_img;
-			
 		}
-		
 
 		$posleft = (getW()-$wimg)/2;
 		$postop = getScrollY()+(getH()-$himg)/2;
@@ -242,15 +426,13 @@
 	
 	
 	
-	// initialise les click des boutons
+	// reset button clicks
 	function initButton(){
 	
 		$('#shinybox_close').unbind('click').click(close);
 		$('#shinybox_back').unbind('click').click(close);
 		$('#shinybox_prev').unbind('click').click(function(){ setCurrent(0); });
 		$('#shinybox_next').unbind('click').click(function(){ setCurrent(1); });
-		
-		if($nbitem > 1) $('#shinybox_prev,#shinybox_next').fadeIn();
 		
 	}
 	
@@ -260,17 +442,17 @@
 	
 	
 	
-	// gestion du current
+	// current management
 	function setCurrent(sens){
 		
-		// lance le timer
-		if($settings.auto){ 
+		// starts the timer
+		if($settings.autoplay && $settings.galery){ 
 			clearInterval($timer); 
 			setTimer();
 		}
 		
 		if(sens){
-			if($current < $nbitem-1){
+			if($current < $tabimg.length-1){
 				$current++;
 			}else{
 				$current = 0;
@@ -279,10 +461,9 @@
 			if($current > 0){
 				$current--;
 			}else{
-				$current = $nbitem-1;
+				$current = $tabimg.length-1;
 			}
 		}
-		
 		
 		changeSlide();
 	}
@@ -291,27 +472,27 @@
 	
 	
 	
-	//change slide après click
+	// slide changes after click
 	function changeSlide(){
 	
-		// détection de la future image
+		// detection of future image
 		$url = $tabimg[$current];
 		
-		// affiche le loader
+		// show loader
 		$('#shinybox_loader').fadeIn();
 		
-		// cache les control
+		// hide controls
 		$('#shinybox_close,#shinybox_prev,#shinybox_next').fadeOut();
 		
-		// cache l'image avant de changer son contenu
+		// hide image before change url
 		$('#shinybox_img').fadeOut($settings.duration/2,
 							function(){
 								setContent();
 								load();
 							});
 		
-		// supprimer le timer
-		if($settings.auto) clearInterval($timer);
+		// delete timer
+		if($settings.autoplay && $settings.galery) clearInterval($timer);
 	}
 	
 	
@@ -320,7 +501,7 @@
 	
 	
 	
-	// ferme et détruit la popin
+	// close and remove popin
 	function close(){
 		$('#shinybox').animate(
 								{ 'opacity' : 0 }, 
@@ -333,7 +514,7 @@
 		
 		$open = false;
 		
-		if($settings.auto) clearInterval($timer);
+		if($settings.autoplay && $settings.galery) clearInterval($timer);
 	}
 	
 	
@@ -342,7 +523,7 @@
 	
 	
 	
-	// gère le time
+	// set Timer for automatique change image
 	function setTimer(){
 		$timer = setInterval(function(){
 					setCurrent(1); 
@@ -356,7 +537,7 @@
 	
 	
 	
-	// retour la largeur du navigateur
+	// return screen width
 	function getW() {
 		if(window.innetWidth){
 			return window.innetWidth;
@@ -370,7 +551,7 @@
 	
 	
 	
-	// retour la hauteur du navigateur
+	// return screeb height
 	function getH() {
 		if(window.innetHeight){
 			return window.innetHeight;
@@ -415,47 +596,6 @@
 		}
 		return scrOfX;
 	}
-	
-	
-	
-	
-	
-	
-	// element principal
-	$.fn.shinybox = function(options){
-	
-		$selector = $(this).selector;
-		$nbitem = $($selector).length;
 
-		return this.each(function(){
-			
-			//intialisation
-			$elem = $(this);
-			$settings = $.extend({},$.fn.shinybox.settings,options);
-			
-			// creation du tableau d'image
-			$tabimg.push($elem.attr('href'));
-			
-			// click sur un item
-			$elem.unbind('click');
-			$elem.click(function(){
-				$item = $(this);
-				$current = $($selector).index($item);
-				$url = $item.attr('href');
-				init();
-				return false;
-			});
-
-		});
-
-	}
-	
-	$.fn.shinybox.settings = {
-		opacity 	: 0.8,
-		duration 	: 500,
-		delay 		: 5000,
-		auto 		: false
-	}
 	
 })(jQuery);
-
