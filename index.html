@@ -10,6 +10,7 @@
 	<meta http-equiv="Content-Type" content="Content-type: text/html; charset=UTF-8" />
 	<meta http-equiv="Content-language" content="fr-FR" />
 	
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 	
 	<link href='http://fonts.googleapis.com/css?family=Amaranth' rel='stylesheet' type='text/css'>
 	<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
@@ -24,24 +25,24 @@
 	
 	<h1>ShinyBox</h1>
 	<div>	
-		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_1.jpg" class="ui-shinybox" data-shinybox-galery="true">
+		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_1a.jpg" class="ui-shinybox">
 			<img src="http://www.leofontin.fr/themes/shinycard/media/works/work_1_small.jpg" alt="" />
 		</a>
-		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_2.jpg" class="ui-shinybox" data-shinybox-galery="true">
+		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_2.jpg" class="ui-shinybox">
 			<img src="http://www.leofontin.fr/themes/shinycard/media/works/work_2_small.jpg" alt="" />
 		</a>
-		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_3.jpg" class="ui-shinybox" data-shinybox-galery="true">
+		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_3.jpg" class="ui-shinybox">
 			<img src="http://www.leofontin.fr/themes/shinycard/media/works/work_3_small.jpg" alt="" />
 		</a>
-		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_4.jpg" class="ui-shinybox" data-shinybox-galery="true">
+		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_4.jpg" class="ui-shinybox">
 			<img src="http://www.leofontin.fr/themes/shinycard/media/works/work_4_small.jpg" alt="" />
 		</a>
-		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_5.jpg" class="ui-shinybox" data-shinybox-galery="true">
+		<a href="http://www.leofontin.fr/themes/shinycard/media/works/work_5.jpg" class="ui-shinybox">
 			<img src="http://www.leofontin.fr/themes/shinycard/media/works/work_5_small.jpg" alt="" />
 		</a>
 	</div>
 	
-	<a href="http://192.168.a0.1/abcpcompetences/www/" class="ui-shinybox-frame button">Frame content</a>
+	<a href="https://maps.google.com/?output=embed&f=q&source=s_q&geocode=&q=London+Eye,+County+Hall,+Westminster+Bridge+Road,+London,+United+Kingdom&hl=lv&ll=51.504155,-0.117749&spn=0.00571,0.016512&sll=56.879635,24.603189&sspn=10.280244,33.815918&vpsrc=6&hq=London+Eye&radius=15000&t=h&z=17" class="ui-shinybox-frame button">Frame content</a>
 	
 	<a href="#inline" class="ui-shinybox-inline button">Inline content</a>
 	<div id="inline" style="visibility:hidden;">
@@ -61,17 +62,15 @@
 		$(function(){
 			
 			$('.ui-shinybox').shinybox({
-				galery : true
+				galery : true,
+				autoplay : true
 			});
 			
-			$('.ui-shinybox-frame').shinybox({
-				type : 'frame'
-			});
+			$('.ui-shinybox-frame').shinybox();
 			
 			$('.ui-shinybox-inline').shinybox({
-				type : 'inline',
 				width : 700,
-				height : 200,
+				height : 200
 			});
 			
 		});

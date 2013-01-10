@@ -14,8 +14,7 @@
 		duration 	: 500,
 		delay 		: 5000,
 		galery 		: false,
-		autoplay	: false,
-		type		: 'default'
+		autoplay	: false
 	}
 
 	// params initalisation
@@ -33,6 +32,11 @@
 	var $tabimg = new Array(); 	// tablea udes images
 	var $timer; 				// interval 
 	var $type; 					// type d'affichage frame / inline / image
+	
+	// expression régulière de détection du type
+	var $type_img = 	/(\.jpg)|(\.jpeg)|(\.bmp)|(\.gif)|(\.png)/i;
+	var $type_inline =	/^\#([a-zA-Z0-9-_]+)/i;
+
 	
 	var $theme = '<div id="shinybox">\
 					<div id="shinybox_contener">\
@@ -57,7 +61,7 @@
 			$elem = $(this);
 			
 			// création du tableau des images
-			if($elem.attr('data-shinybox-galery') == 'true'){
+			if($type_img.test($elem.attr('href'))){
 				$tabimg.push($elem.attr('href'));	
 			}
 			
@@ -70,12 +74,13 @@
 				// concaténation des settings et options
 				$settings = $.extend({},$option,options);
 				
-				// initlisation du type
-				$type = $settings['type'];
 				
 				$item = $(this);
 				
 				$url = $item.attr('href');
+				
+				// initlisation du type
+				setType();
 				
 				// calcul du current
 				for(var i=0; i<$tabimg.length; i++){
@@ -95,11 +100,35 @@
 	
 	
 	
+	
+	
+	// détecte le type d'affichage
+	function setType(){
+		
+		// set type = image
+		if($type_img.test($url)){
+			$type = 'image';
+		}
+		
+		// set type = inline
+		else if($type_inline.test($url)){
+			$type = 'inline';
+		}
+		
+		// set type = frame
+		else {
+			$type = 'frame';
+		}
+	}
+	
+	
+	
+	
 	// charge le contenu
 	function init(){
 	
 		// implémentation de la popin
-		$('body').prepend($theme);
+		$('body').append($theme);
 		
 		
 		$('#shinybox_back').css('opacity',0).animate({'opacity' : $settings.opacity}, $settings.duration);
@@ -131,15 +160,8 @@
 		switch($type){
 			
 			case 'frame':
-				$('#shinybox_frame').load($url, function(response,status){
-					if(status == 'success'){
-						show();	
-					}
-					else if(status == 'error'){
-						alert('Loading impossible, please try later.');
-						close();
-					}
-				});
+				$('#shinybox_frame').attr('src',$url);
+				show();
 			break;
 			
 			case 'inline':
@@ -150,7 +172,7 @@
 				}
 			break;
 			
-			case 'default':
+			case 'image':
 				// nouvelle image de préchargement
 				$imageloader = new Image();
 				
@@ -215,7 +237,7 @@
 												$('#shinybox_inline').fadeIn();
 											break;
 											
-											case 'default':
+											case 'image':
 												$('#shinybox_img').fadeIn();
 												if($settings.galery && $tabimg.length > 1){
 													$('#shinybox_prev').fadeIn();
@@ -274,7 +296,7 @@
 			break;
 			
 			
-			case 'default':
+			case 'image':
 				if($('#shinybox_img').length == 0){
 					$('#shinybox_content').append('<img src="" id="shinybox_img" />');	
 				}
@@ -332,7 +354,7 @@
 			
 			
 			
-			case 'default':
+			case 'image':
 				// image width
 				var width_img = $imageloader.width;
 				
