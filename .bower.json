@@ -1,0 +1,14 @@
+{
+  "name": "shinybox",
+  "homepage": "https://github.com/leofontin/shinybox",
+  "authors": [
+    "Léo Fontin"
+  ],
+  "description": "Lightbox for jQuery",
+  "main": "js/jquery.shinybox.js",
+  "moduleType": [],
+  "license": "MIT",
+  "dependencies": {
+    "jquery": "2.2.0"
+  }
+}
